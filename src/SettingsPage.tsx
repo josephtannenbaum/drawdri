@@ -2,20 +2,25 @@ import { useEffect, useState } from "react";
 import { TrashIcon, PlusIcon, PhotoIcon } from "@heroicons/react/24/solid";
 import { INTERVAL_OPTIONS, SAMPLE_SAVE } from "./constants";
 import Select from "react-select";
-import { load } from "./saving";
 import { Drill } from "./types";
 import DiscardModal from "./DiscardModal";
 import Buttony from "./Buttony";
+import { useLocalStorage } from "./useLocalStorage";
 
 function SettingsPage({ onStart }: { onStart: () => void }) {
-  const [drills, setDrills] = useState<Drill[]>([]);
-  const [selectedDrillName, setSelectedDrillName] = useState<
-    string | undefined
-  >();
-  const [selectedInterval, setTimeInterval] = useState(
-    INTERVAL_OPTIONS[4].value
+  const [drills, setDrills] = useLocalStorage<Drill[]>(
+    "drills",
+    SAMPLE_SAVE["drills"]
   );
-  const selectedDrill = drills.find(({ name }) => name === selectedDrillName);
+  const [selectedDrillName, setSelectedDrillName] = useLocalStorage<
+    string | null
+  >("selectedDrillName", SAMPLE_SAVE["selectedDrillName"]);
+  const [selectedInterval, setSelectedInterval] = useLocalStorage<number>(
+    "selectedInterval",
+    SAMPLE_SAVE["selectedInterval"]
+  );
+
+  const selectedDrill = drills?.find(({ name }) => name === selectedDrillName);
   const selectedIntervalOption = INTERVAL_OPTIONS.find(
     ({ value }) => selectedInterval === value
   );
@@ -23,19 +28,17 @@ function SettingsPage({ onStart }: { onStart: () => void }) {
   const [urlInput, setUrlInput] = useState("");
 
   useEffect(() => {
-    let loadedData = load();
-    if (!loadedData) {
-      loadedData = SAMPLE_SAVE;
-    }
-    setDrills(loadedData.drills);
-    setSelectedDrillName(loadedData.selectedDrill);
-    setTimeInterval(loadedData.selectedInterval);
-  }, [setDrills, setSelectedDrillName, setTimeInterval]);
-
-  useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (urlInput) {
         setUrlInput("");
+        setDrills(
+          drills?.map((drill) => {
+            if (drill.name === selectedDrillName) {
+              drill.urls.push(urlInput);
+            }
+            return drill;
+          })
+        );
       }
     }, 500);
     return () => clearTimeout(timeoutId);
@@ -44,7 +47,7 @@ function SettingsPage({ onStart }: { onStart: () => void }) {
   const [selectInterval, setSelectInterval] = useState(false);
   const onSelectInterval = (value: number) => {
     setSelectInterval(false);
-    setTimeInterval(value);
+    setSelectedInterval(value);
   };
 
   const [discardModal, setDiscardModal] = useState(false);
@@ -52,16 +55,43 @@ function SettingsPage({ onStart }: { onStart: () => void }) {
   const onDiscardClick = () => toggleDiscardModal();
   const onDiscardConfirm = () => {
     toggleDiscardModal();
+    if (!drills) return;
+    const drillIdx = drills.findIndex(({ name }) => name === selectedDrillName);
+    const newDrills = drills.filter(({ name }) => name !== selectedDrillName);
+    const nextIdx = Math.min(Math.max(drillIdx, 0), newDrills.length - 1);
+    setSelectedDrillName(newDrills[nextIdx]?.name || null);
+    setDrills(newDrills);
   };
 
-  const onChangeDrill = (value: string | undefined) => {};
+  const onNewDrillClick = () => {
+    if (!drills) return;
+    const drillName = prompt("drill name:");
+    if (!drillName) return;
+    setDrills([...drills, { name: drillName, urls: [] }]);
+    setSelectedDrillName(drillName);
+  };
 
-  const onDeleteDrillImage = (url: string) => {};
+  const onChangeDrill = (value: string) => {
+    setSelectedDrillName(value);
+  };
 
-  if (!selectedDrill) {
-    return null;
-  }
-  const drillSelectOptions = drills.map(({ name }) => ({
+  const onDeleteDrillImage = (url: string) => {
+    setDrills(
+      drills?.map((drill) => {
+        if (drill.name === selectedDrillName) {
+          const newUrls = [...drill.urls];
+          newUrls.splice(
+            drill.urls.findIndex((drillUrl) => drillUrl === url),
+            1
+          );
+          drill.urls = newUrls;
+        }
+        return drill;
+      })
+    );
+  };
+
+  const drillSelectOptions = drills?.map(({ name }) => ({
     label: name,
     value: name,
   }));
@@ -72,19 +102,22 @@ function SettingsPage({ onStart }: { onStart: () => void }) {
           <Select
             options={drillSelectOptions}
             value={
-              drillSelectOptions.find(
+              drillSelectOptions?.find(
                 ({ value }) => value === selectedDrillName
               ) || null
             }
             className="flex-grow-1 me-1"
             placeholder="Select a drill"
-            onChange={(e) => onChangeDrill(e?.value)}
+            onChange={(e) => (e?.value ? onChangeDrill(e?.value) : undefined)}
           />
           <TrashIcon
             className="icon text-secondary me-1"
             onClick={() => onDiscardClick()}
           />
-          <PlusIcon className="icon text-secondary" />
+          <PlusIcon
+            className="icon text-secondary"
+            onClick={() => onNewDrillClick()}
+          />
         </div>
         <div
           style={{ height: "3em" }}
@@ -131,21 +164,23 @@ function SettingsPage({ onStart }: { onStart: () => void }) {
       <div className="position-absolute top-0 start-0 p-2 w-100 overflow-scroll">
         <div className="row align-content-start pb-2">
           <div className="col-lg-2 col-md-4 col-xs-6" />
-          {[...selectedDrill.urls].map((image, i) => (
-            <div key={i} className="col-lg-2 col-md-4 col-xs-6 mb-4">
-              <div
-                className="img-fluid img-thumbnail settingsThumbnail w-100"
-                style={{
-                  backgroundImage: `url(${image})`,
-                }}
-              >
-                <TrashIcon
-                  onClick={() => onDeleteDrillImage(image)}
-                  className="position-absolute icon settingsThumbnailTrash"
-                />
-              </div>
-            </div>
-          ))}
+          {selectedDrill
+            ? [...selectedDrill.urls].map((image, i) => (
+                <div key={i} className="col-lg-2 col-md-4 col-xs-6 mb-4">
+                  <div
+                    className="img-fluid img-thumbnail settingsThumbnail w-100"
+                    style={{
+                      backgroundImage: `url(${image})`,
+                    }}
+                  >
+                    <TrashIcon
+                      onClick={() => onDeleteDrillImage(image)}
+                      className="position-absolute icon settingsThumbnailTrash"
+                    />
+                  </div>
+                </div>
+              ))
+            : null}
         </div>
       </div>
       <DiscardModal

@@ -1,4 +1,5 @@
-function shuffle<T>(array: T[]) {
+function shuffle<T>(_array: T[]) {
+  const array = [..._array];
   var currentIndex = array.length,
     temporaryValue: any,
     randomIndex: number;
@@ -18,4 +19,4 @@ function shuffle<T>(array: T[]) {
   return array;
 }
 
-export default shuffle
+export default shuffle;

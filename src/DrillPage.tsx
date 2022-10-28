@@ -1,28 +1,29 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Buttony from "./Buttony";
 import { INTERVAL_OPTIONS, SAMPLE_SAVE } from "./constants";
-import { load } from "./saving";
+import shuffle from "./shuffle";
 import { Drill } from "./types";
 import { useCountdown } from "./useCountDown";
+import { useLocalStorage } from "./useLocalStorage";
 
 function DrillPage({ onStop }: { onStop: () => void }) {
-  const [drills, setDrills] = useState<Drill[]>([]);
-  const [selectedDrillName, setSelectedDrillName] = useState<
-    string | undefined
-  >();
+  const [drills] = useLocalStorage<Drill[]>("drills", []);
+  const [selectedDrillName] = useLocalStorage<string>("selectedDrillName", "");
+  const [selectedInterval] = useLocalStorage<number>(
+    "selectedInterval",
+    SAMPLE_SAVE["selectedInterval"]
+  );
+
   const [timerTotalMs, setTimerTotalMs] = useState(INTERVAL_OPTIONS[4].value);
 
   useEffect(() => {
-    let loadedData = load();
-    if (!loadedData) {
-      loadedData = SAMPLE_SAVE;
-    }
-    setDrills(loadedData.drills);
-    setSelectedDrillName(loadedData.selectedDrill);
-    setTimerTotalMs(loadedData.selectedInterval);
-  }, [setDrills, setSelectedDrillName, setTimerTotalMs]);
+    setTimerTotalMs(selectedInterval);
+  }, [selectedInterval]);
 
   const selectedDrill = drills.find(({ name }) => name === selectedDrillName);
+  const drillUrlList = useMemo(() => {
+    return selectedDrill ? shuffle(selectedDrill.urls) : [];
+  }, [selectedDrill]);
 
   const [drillIdx, setDrillIdx] = useState(0);
   const { timeLeft, timeLeftMs, isOn, toggle, start, pause, reset } =
@@ -31,28 +32,28 @@ function DrillPage({ onStop }: { onStop: () => void }) {
   useEffect(() => {
     if (timeLeftMs < 1) {
       const nextDrillIdx = drillIdx + 1;
-      if (selectedDrill?.urls[nextDrillIdx]) {
+      if (drillUrlList[nextDrillIdx]) {
         setDrillIdx(nextDrillIdx);
         reset();
       } else {
         pause();
       }
     }
-  }, [drillIdx, pause, reset, selectedDrill?.urls, timeLeftMs, timerTotalMs]);
+  }, [drillIdx, pause, reset, drillUrlList, timeLeftMs, timerTotalMs]);
 
   useEffect(() => {
     start();
   }, [start]);
 
-  const imageUrl = selectedDrill?.urls[drillIdx];
+  const imageUrl = drillUrlList[drillIdx];
 
   const onPrev = () => {
-    if (!selectedDrill?.urls[drillIdx - 1]) return;
+    if (!drillUrlList[drillIdx - 1]) return;
     setDrillIdx(drillIdx - 1);
     reset();
   };
   const onNext = () => {
-    if (!selectedDrill?.urls[drillIdx + 1]) return;
+    if (!drillUrlList[drillIdx + 1]) return;
     setDrillIdx(drillIdx + 1);
     reset();
   };
@@ -67,7 +68,7 @@ function DrillPage({ onStop }: { onStop: () => void }) {
       </span>
       <div className="mb-3" style={{ height: "85vh" }}>
         {imageUrl ? (
-          <img className="h-100" alt={selectedDrill.name} src={imageUrl} />
+          <img className="h-100" alt={selectedDrill?.name} src={imageUrl} />
         ) : null}
       </div>
       <div className="mb-1">
@@ -75,8 +76,7 @@ function DrillPage({ onStop }: { onStop: () => void }) {
           prev
         </Buttony>
         <Buttony className="fs-4 pb-1" onClick={() => onPlayPause()}>
-          {isOn ? "playing" : "paused"} {drillIdx + 1}/
-          {selectedDrill?.urls.length}
+          {isOn ? "playing" : "paused"} {drillIdx + 1}/{drillUrlList.length}
         </Buttony>
         <Buttony className="fs-4 pb-1" onClick={() => onNext()}>
           next

@@ -5,6 +5,6 @@ export interface Drill {
 
 export interface SaveData {
   selectedInterval: number;
-  selectedDrill: string;
+  selectedDrillName: string;
   drills: Drill[];
 }
