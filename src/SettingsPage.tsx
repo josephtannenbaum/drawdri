@@ -5,7 +5,7 @@ import Select from "react-select";
 import { load } from "./saving";
 import { Drill } from "./types";
 import DiscardModal from "./DiscardModal";
-// import { Button, Input } from "reactstrap";
+import Buttony from "./Buttony";
 
 function SettingsPage({ onStart }: { onStart: () => void }) {
   const [drills, setDrills] = useState<Drill[]>([]);
@@ -92,9 +92,7 @@ function SettingsPage({ onStart }: { onStart: () => void }) {
         >
           {!selectInterval && (
             <div className="fs-3">
-              <span className="border border-dark px-1 me-1 cursor-pointer">
-                start
-              </span>
+              <Buttony onClick={() => onStart()}>start</Buttony>
               <span
                 className="cursor-pointer text-decoration-underline"
                 onClick={() => setSelectInterval(true)}
