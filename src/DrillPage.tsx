@@ -6,7 +6,11 @@ import { Drill } from "./types";
 import { useCountdown } from "./useCountDown";
 import { useLocalStorage } from "./useLocalStorage";
 
-function DrillPage({ onStop }: { onStop: () => void }) {
+function DrillPage({
+  onStop,
+}: {
+  onStop: (props?: { confetti: boolean }) => void;
+}) {
   const [drills] = useLocalStorage<Drill[]>("drills", []);
   const [selectedDrillName] = useLocalStorage<string>("selectedDrillName", "");
   const [selectedInterval] = useLocalStorage<number>(
@@ -31,9 +35,10 @@ function DrillPage({ onStop }: { onStop: () => void }) {
         reset();
       } else {
         pause();
+        onStop({ confetti: true });
       }
     }
-  }, [drillIdx, pause, reset, drillUrlList, timeLeftMs]);
+  }, [drillIdx, pause, reset, drillUrlList, timeLeftMs, onStop]);
 
   useEffect(() => {
     start();
