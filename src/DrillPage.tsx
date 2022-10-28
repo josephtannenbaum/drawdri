@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Buttony from "./Buttony";
-import { INTERVAL_OPTIONS, SAMPLE_SAVE } from "./constants";
+import { SAMPLE_SAVE } from "./constants";
 import shuffle from "./shuffle";
 import { Drill } from "./types";
 import { useCountdown } from "./useCountDown";
@@ -14,12 +14,6 @@ function DrillPage({ onStop }: { onStop: () => void }) {
     SAMPLE_SAVE["selectedInterval"]
   );
 
-  const [timerTotalMs, setTimerTotalMs] = useState(INTERVAL_OPTIONS[4].value);
-
-  useEffect(() => {
-    setTimerTotalMs(selectedInterval);
-  }, [selectedInterval]);
-
   const selectedDrill = drills.find(({ name }) => name === selectedDrillName);
   const drillUrlList = useMemo(() => {
     return selectedDrill ? shuffle(selectedDrill.urls) : [];
@@ -27,7 +21,7 @@ function DrillPage({ onStop }: { onStop: () => void }) {
 
   const [drillIdx, setDrillIdx] = useState(0);
   const { timeLeft, timeLeftMs, isOn, toggle, start, pause, reset } =
-    useCountdown(timerTotalMs);
+    useCountdown(selectedInterval);
 
   useEffect(() => {
     if (timeLeftMs < 1) {
@@ -39,7 +33,7 @@ function DrillPage({ onStop }: { onStop: () => void }) {
         pause();
       }
     }
-  }, [drillIdx, pause, reset, drillUrlList, timeLeftMs, timerTotalMs]);
+  }, [drillIdx, pause, reset, drillUrlList, timeLeftMs]);
 
   useEffect(() => {
     start();

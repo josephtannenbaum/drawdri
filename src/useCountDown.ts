@@ -8,6 +8,7 @@ const useCountdown = (secs: number) => {
   const [timeLeft, setTimeLeft] = useState(milliseconds);
   const [isOn, setIsOn] = useState(false);
   const start = useCallback(() => {
+    if (timeLeft < 1) return; // i give up :c
     setCountdownDate(new Date().getTime() + timeLeft);
     setIsOn(true);
   }, [timeLeft]);

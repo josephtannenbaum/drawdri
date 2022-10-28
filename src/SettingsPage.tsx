@@ -125,7 +125,11 @@ function SettingsPage({ onStart }: { onStart: () => void }) {
         >
           {!selectInterval && (
             <div className="fs-3">
-              <Buttony onClick={() => onStart()}>start</Buttony>
+              <Buttony
+                onClick={() => (selectedDrill?.urls.length ? onStart() : null)}
+              >
+                start
+              </Buttony>
               <span
                 className="cursor-pointer text-decoration-underline"
                 onClick={() => setSelectInterval(true)}
