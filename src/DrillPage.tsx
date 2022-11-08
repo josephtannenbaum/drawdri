@@ -17,6 +17,7 @@ function DrillPage({
     "selectedInterval",
     SAMPLE_SAVE["selectedInterval"]
   );
+  const [flipMode] = useLocalStorage<boolean>("flipMode", false);
 
   const selectedDrill = drills.find(({ name }) => name === selectedDrillName);
   const drillUrlList = useMemo(() => {
@@ -67,7 +68,11 @@ function DrillPage({
       </span>
       <div className="mb-3" style={{ height: "85vh" }}>
         {imageUrl ? (
-          <img className="h-100" alt={selectedDrill?.name} src={imageUrl} />
+          <img
+            className={`h-100 ${flipMode ? "flipMode" : ""}`}
+            alt={selectedDrill?.name}
+            src={imageUrl}
+          />
         ) : null}
       </div>
       <div className="mb-1">

@@ -7,4 +7,5 @@ export interface SaveData {
   selectedInterval: number;
   selectedDrillName: string;
   drills: Drill[];
+  flipMode: boolean;
 }

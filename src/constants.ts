@@ -17,6 +17,7 @@ export const SAMPLE_SAVE: SaveData = {
       ],
     },
   ],
+  flipMode: false,
 };
 
 export const INTERVAL_OPTIONS = [

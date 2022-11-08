@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
-import { TrashIcon, PlusIcon, PhotoIcon } from "@heroicons/react/24/solid";
+import {
+  TrashIcon,
+  PlusIcon,
+  PhotoIcon,
+  ArrowUturnDownIcon,
+} from "@heroicons/react/24/solid";
 import { INTERVAL_OPTIONS, SAMPLE_SAVE } from "./constants";
 import Select from "react-select";
 import { Drill } from "./types";
@@ -18,6 +23,10 @@ function SettingsPage({ onStart }: { onStart: () => void }) {
   const [selectedInterval, setSelectedInterval] = useLocalStorage<number>(
     "selectedInterval",
     SAMPLE_SAVE["selectedInterval"]
+  );
+  const [flipMode, setFlipMode] = useLocalStorage<boolean>(
+    "flipMode",
+    SAMPLE_SAVE["flipMode"]
   );
 
   const selectedDrill = drills?.find(({ name }) => name === selectedDrillName);
@@ -52,7 +61,6 @@ function SettingsPage({ onStart }: { onStart: () => void }) {
 
   const [discardModal, setDiscardModal] = useState(false);
   const toggleDiscardModal = () => setDiscardModal(!discardModal);
-  const onDiscardClick = () => toggleDiscardModal();
   const onDiscardConfirm = () => {
     toggleDiscardModal();
     if (!drills) return;
@@ -69,10 +77,6 @@ function SettingsPage({ onStart }: { onStart: () => void }) {
     if (!drillName) return;
     setDrills([...drills, { name: drillName, urls: [] }]);
     setSelectedDrillName(drillName);
-  };
-
-  const onChangeDrill = (value: string) => {
-    setSelectedDrillName(value);
   };
 
   const onDeleteDrillImage = (url: string) => {
@@ -108,11 +112,13 @@ function SettingsPage({ onStart }: { onStart: () => void }) {
             }
             className="flex-grow-1 me-1"
             placeholder="Select a drill"
-            onChange={(e) => (e?.value ? onChangeDrill(e?.value) : undefined)}
+            onChange={(e) =>
+              e?.value ? setSelectedDrillName(e?.value) : undefined
+            }
           />
           <TrashIcon
             className="icon text-secondary me-1"
-            onClick={() => onDiscardClick()}
+            onClick={() => toggleDiscardModal()}
           />
           <PlusIcon
             className="icon text-secondary"
@@ -151,6 +157,11 @@ function SettingsPage({ onStart }: { onStart: () => void }) {
               ))}
             </div>
           )}
+          <ArrowUturnDownIcon
+            className="icon-sm ms-auto"
+            style={{ color: flipMode ? "black" : "gray" }}
+            onClick={() => setFlipMode(!flipMode)}
+          />
         </div>
         <div className="mb-1">
           <input
