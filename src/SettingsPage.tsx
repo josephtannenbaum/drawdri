@@ -4,11 +4,13 @@ import {
   PlusIcon,
   PhotoIcon,
   ArrowUturnDownIcon,
+  QuestionMarkCircleIcon,
 } from "@heroicons/react/24/solid";
 import { INTERVAL_OPTIONS, SAMPLE_SAVE } from "./constants";
 import Select from "react-select";
 import { Drill } from "./types";
 import DiscardModal from "./DiscardModal";
+import AboutModal from "./AboutModal";
 import Buttony from "./Buttony";
 import { useLocalStorage } from "./useLocalStorage";
 
@@ -61,6 +63,8 @@ function SettingsPage({ onStart }: { onStart: () => void }) {
 
   const [discardModal, setDiscardModal] = useState(false);
   const toggleDiscardModal = () => setDiscardModal(!discardModal);
+  const [aboutModal, setAboutModal] = useState(false);
+  const toggleAboutModal = () => setAboutModal(!aboutModal);
   const onDiscardConfirm = () => {
     toggleDiscardModal();
     if (!drills) return;
@@ -174,6 +178,13 @@ function SettingsPage({ onStart }: { onStart: () => void }) {
         </div>
         <div className="text-secondary">
           {selectedDrill?.urls.length} <PhotoIcon className="icon " />
+          <QuestionMarkCircleIcon
+            style={{
+              float: "right",
+            }}
+            className="icon text-secondary"
+            onClick={() => toggleAboutModal()}
+          />
         </div>
       </div>
       <div className="position-absolute top-0 start-0 p-2 w-100 overflow-scroll">
@@ -203,6 +214,11 @@ function SettingsPage({ onStart }: { onStart: () => void }) {
         toggleDiscardModal={toggleDiscardModal}
         onDiscardConfirm={onDiscardConfirm}
         selectedDrill={selectedDrillName || ""}
+      />
+      <AboutModal
+        isOpen={aboutModal}
+        toggle={toggleAboutModal}
+        onConfirm={() => setAboutModal(false)}
       />
     </div>
   );
